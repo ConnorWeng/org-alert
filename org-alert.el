@@ -47,7 +47,7 @@
 (defvar org-alert-notification-title "*org*"
   "Title to be sent with notify-send.")
 
-(defvar org-alert-headline-regexp "\\(^.+Sched.+:.+\\|Deadline:.+\\)"
+(defvar org-alert-headline-regexp "\\(^.+TODO.+\\)"
   "Regexp for headlines to search in agenda buffer.")
 
 (defun org-alert--strip-prefix (headline)
@@ -63,10 +63,15 @@
           (< (abs datetime-diff) (* org-alert-interval 2)))
       t)))
 
+(defun org-alert--filter-future (headline)
+  (not (s-contains? "In  " headline)))
+
 (defun org-alert--unique-headlines (regexp agenda)
   "Return unique headlines from the results of REGEXP in AGENDA."
   (let ((matches (-distinct (-flatten (s-match-strings-all regexp agenda)))))
-    (--map (org-alert--strip-prefix it) (--filter (org-alert--filter-datetime it) matches))))
+    (--map (org-alert--strip-prefix it)
+           (--filter (org-alert--filter-future it)
+                     (--filter (org-alert--filter-datetime it) matches)))))
 
 
 (defun org-alert--get-headlines ()
